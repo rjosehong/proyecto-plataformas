@@ -211,7 +211,7 @@ fun TuTourMasReciente(card: CuadroAsignacion, modifier:Modifier=Modifier){
             Row(horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()){
                 Text(
-                    text = "${hora_inicial} - ${hora_final}",
+                    text = "${hora_inicial} - ${hora_final} — ${card.dia}",
                     fontSize = 11.sp
                 )
 
