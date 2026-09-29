@@ -1,111 +1,97 @@
 package plat.lab3.proyecto_plataformas.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
-import plat.lab3.proyecto_plataformas.R
 import plat.lab3.proyecto_plataformas.ui.theme.ProyectoplataformasTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AssignedToursScreen(modifier: Modifier = Modifier) {
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
+    var selectedTab by remember {
+        mutableStateOf(0)
+    }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "UVG Tours",
-                    modifier = Modifier.padding(16.dp),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                HorizontalDivider()
-                NavigationDrawerItem(
-                    label = { Text("Inicio") },
-                    selected = false,
-                    onClick = { scope.launch { drawerState.close() } },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Tours Asignados") },
-                    selected = true,
-                    onClick = { scope.launch { drawerState.close() } },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Calificar Tour") },
-                    selected = false,
-                    onClick = { scope.launch { drawerState.close() } },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-            }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                title = { Text("UVG–Tours") }
+            )
         }
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Tours Asignados") },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            scope.launch { drawerState.open() }
-                        }) {
-                            Icon(modifier = Modifier.fillMaxSize(0.8f),
-                                painter = painterResource(id = R.drawable.icon_menu),
-                                contentDescription = "Menu"
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFF1B4332),
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
-                    )
-                )
+    ) { innerPadding ->
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(top = 8.dp, start = 8.dp, end = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            TabRow(selectedTabIndex = selectedTab) {
+                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Tours Asignados") })
+                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Historial") })
             }
-        ) { innerPadding ->
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFF4F6F8))
-                    .padding(innerPadding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Text(
-                    text = "Tours asignados",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
 
-                AssignedCardItem(
-                    title = "Tour en el campus en familia",
-                    dateInfo = "Oct 18 • Aprobado por Rodrigo Navas",
-                    statusText = "Verificado",
-                    statusColor = Color(0xFF2D6A4F)
-                )
+            when (selectedTab) {
+                0 -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Text(
+                            text = "Tours asignados",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
 
-                AssignedCardItem(
-                    title = "Tours de laboratorios",
-                    dateInfo = "Oct 08 • Pendiente",
-                    statusText = "En revisión",
-                    statusColor = Color(0xFFD4A373)
-                )
+                        AssignedCardItem(
+                            title = "Tour en el campus en familia",
+                            dateInfo = "Oct 18 • Aprobado por Rodrigo Navas",
+                            statusText = "Verificado",
+                            statusColor = MaterialTheme.colorScheme.primary
+                        )
+
+                        AssignedCardItem(
+                            title = "Tours de laboratorios",
+                            dateInfo = "Oct 08 • Pendiente",
+                            statusText = "En revisión",
+                            statusColor = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                }
+                1 -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Text(
+                            text = "Historial de Tours",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
             }
         }
     }
@@ -114,7 +100,7 @@ fun AssignedToursScreen(modifier: Modifier = Modifier) {
 @Composable
 fun AssignedCardItem(title: String, dateInfo: String, statusText: String, statusColor: Color) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth()
@@ -133,7 +119,7 @@ fun AssignedCardItem(title: String, dateInfo: String, statusText: String, status
                     text = title,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
                 Surface(
@@ -153,7 +139,7 @@ fun AssignedCardItem(title: String, dateInfo: String, statusText: String, status
             Text(
                 text = dateInfo,
                 fontSize = 12.sp,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
