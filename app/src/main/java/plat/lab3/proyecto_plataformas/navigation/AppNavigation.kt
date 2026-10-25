@@ -13,6 +13,7 @@ import androidx.navigation.toRoute
 import plat.lab3.proyecto_plataformas.data.ejemplos.ejemploAdminView
 import plat.lab3.proyecto_plataformas.data.ejemplos.ejemploCalificacion
 import plat.lab3.proyecto_plataformas.ui.screens.AppLogin
+import plat.lab3.proyecto_plataformas.ui.screens.login.AppLoginScreen
 import plat.lab3.proyecto_plataformas.ui.screens.AppRegister
 import plat.lab3.proyecto_plataformas.ui.screens.Profile
 import plat.lab3.proyecto_plataformas.ui.screens.admins.AsignacionHoras
@@ -29,7 +30,7 @@ fun AppNavigation() {
     NavHost(navController = navController, startDestination = Login) {
 
         composable<Login> {
-            AppLogin(
+            AppLoginScreen(
                 onEnterClick = { role ->
                     navController.navigate(Menu(role)) {
                         popUpTo<Login> { inclusive = true }
