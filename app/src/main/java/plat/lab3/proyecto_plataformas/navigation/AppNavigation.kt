@@ -1,7 +1,5 @@
 package plat.lab3.proyecto_plataformas.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -10,48 +8,45 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import plat.lab3.proyecto_plataformas.data.ejemplos.ejemploAdminView
-import plat.lab3.proyecto_plataformas.data.ejemplos.ejemploCalificacion
-import plat.lab3.proyecto_plataformas.ui.screens.AppLogin
+import plat.lab3.proyecto_plataformas.ui.screens.admins.asignacionhoras.AsignacionHorasScreen
+import plat.lab3.proyecto_plataformas.ui.screens.admins.gestionadmin.GestionAdminScreen
+import plat.lab3.proyecto_plataformas.ui.screens.estudiantes.asignaciontour.AsignacionTourScreen
+import plat.lab3.proyecto_plataformas.ui.screens.estudiantes.scores.ScoresScreen
 import plat.lab3.proyecto_plataformas.ui.screens.login.AppLoginScreen
-import plat.lab3.proyecto_plataformas.ui.screens.AppRegister
-import plat.lab3.proyecto_plataformas.ui.screens.Profile
-import plat.lab3.proyecto_plataformas.ui.screens.admins.AsignacionHoras
-import plat.lab3.proyecto_plataformas.ui.screens.admins.gestionAdmin
-import plat.lab3.proyecto_plataformas.ui.screens.estudiantes.AsignacionTour
-import plat.lab3.proyecto_plataformas.ui.screens.estudiantes.ScoresScreen
-import plat.lab3.proyecto_plataformas.ui.screens.usuarios.ToursScreen
-import plat.lab3.proyecto_plataformas.ui.screens.usuarios.RateTourScreen
+import plat.lab3.proyecto_plataformas.ui.screens.profile.ProfileScreen
+import plat.lab3.proyecto_plataformas.ui.screens.register.AppRegisterScreen
+import plat.lab3.proyecto_plataformas.ui.screens.usuarios.ratetour.RateTourScreen
+import plat.lab3.proyecto_plataformas.ui.screens.usuarios.toursscreen.ToursScreen
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Login) {
+    NavHost(navController = navController, startDestination = LoginRoute) {
 
-        composable<Login> {
+        composable<LoginRoute> {
             AppLoginScreen(
-                onEnterClick = { role ->
-                    navController.navigate(Menu(role)) {
-                        popUpTo<Login> { inclusive = true }
+                onEnterClick = { role: Role ->
+                    navController.navigate(MenuRoute(role)) {
+                        popUpTo<LoginRoute> { inclusive = true }
                     }
                 },
-                onRegisterClick = { navController.navigate(Register) }
+                onRegisterClick = { navController.navigate(RegisterRoute) }
             )
         }
 
-        composable<Register> {
-            AppRegister(
+        composable<RegisterRoute> {
+            AppRegisterScreen(
                 onRegisterDone = { navController.popBackStack() }
             )
         }
 
-        composable<Menu> { backStackEntry ->
-            val args = backStackEntry.toRoute<Menu>()
+        composable<MenuRoute> { backStackEntry ->
+            val args = backStackEntry.toRoute<MenuRoute>()
             MainTabs(
                 role = args.role,
                 onLogoutClick = {
-                    navController.navigate(Login) {
+                    navController.navigate(LoginRoute) {
                         popUpTo(navController.graph.id) { inclusive = true }
                         launchSingleTop = true
                     }
@@ -70,31 +65,26 @@ private fun MainTabs(role: Role, onLogoutClick: () -> Unit) {
     ) { padding ->
         NavHost(
             navController = tabsNavController,
-            startDestination = ToursTab,
+            startDestination = ToursTabRoute,
             modifier = Modifier.padding(bottom = padding.calculateBottomPadding())
         ) {
-            composable<ToursTab> {
+            composable<ToursTabRoute> {
                 when (role) {
-                    Role.ADMIN -> gestionAdmin(cards = ejemploAdminView)
-                    Role.TOUR_GUIDE -> AsignacionTour()
+                    Role.ADMIN -> GestionAdminScreen()
+                    Role.TOUR_GUIDE -> AsignacionTourScreen()
                     Role.USER -> ToursScreen()
                 }
             }
-            composable<FeedbackTab> {
+            composable<FeedbackTabRoute> {
                 when (role) {
-                    Role.ADMIN -> AsignacionHoras()
-                    Role.TOUR_GUIDE -> ScoresScreen(cards = ejemploCalificacion)
+                    Role.ADMIN -> AsignacionHorasScreen()
+                    Role.TOUR_GUIDE -> ScoresScreen()
                     Role.USER -> RateTourScreen()
                 }
             }
-            composable<ProfileTab> {
-                Profile(onLogoutClick = onLogoutClick)
+            composable<ProfileTabRoute> {
+                ProfileScreen(onLogoutClick = onLogoutClick)
             }
         }
     }
-}
-
-@Composable
-private fun BlankScreen() {
-    Box(modifier = Modifier.fillMaxSize())
 }

@@ -3,26 +3,23 @@ package plat.lab3.proyecto_plataformas.navigation
 import kotlinx.serialization.Serializable
 
 @Serializable
-object Login{
-}
+object LoginRoute
 
 @Serializable
-object Register{
-}
-
+object RegisterRoute
 
 @Serializable
 enum class Role { ADMIN, TOUR_GUIDE, USER }
 
 @Serializable
-data class Menu(val role: Role)
+data class MenuRoute(val role: Role)
 
-// Bottom bar tabs (inside Menu)
+// Bottom bar tabs
 @Serializable
-object ToursTab
-
-@Serializable
-object FeedbackTab
+object ToursTabRoute
 
 @Serializable
-object ProfileTab
+object FeedbackTabRoute
+
+@Serializable
+object ProfileTabRoute
