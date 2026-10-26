@@ -32,7 +32,7 @@ class AsignacionHorasViewModel : ViewModel() {
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    errorMessage = e.localizedMessage ?: "Ocurrió un error inesperado"
+                    errorMessage = e.localizedMessage ?: "Ocurrió un error inesperado."
                 )
             }
         }

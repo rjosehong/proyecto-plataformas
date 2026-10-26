@@ -56,7 +56,7 @@ fun RateTourScreen(
                             Icon(
                                 modifier = Modifier.fillMaxSize(0.8f),
                                 painter = painterResource(id = R.drawable.icon_menu),
-                                contentDescription = "Menu"
+                                contentDescription = "Menú"
                             )
                         }
                     },

@@ -70,7 +70,7 @@ fun AppLoginScreen(
                     modifier = Modifier.fillMaxWidth(0.6f),
                     onClick = { viewModel.onEvent(LoginEvent.SubmitLogin(Role.TOUR_GUIDE, onEnterClick)) }
                 ) {
-                    Text("Entrar como tourguide")
+                    Text("Entrar como tour guide")
                 }
 
                 Spacer(modifier = Modifier.padding(top = 8.dp))
@@ -79,7 +79,7 @@ fun AppLoginScreen(
                     modifier = Modifier.fillMaxWidth(0.6f),
                     onClick = { viewModel.onEvent(LoginEvent.SubmitLogin(Role.ADMIN, onEnterClick)) }
                 ) {
-                    Text("Entrar como admin")
+                    Text("Entrar como administrador")
                 }
             }
 
@@ -88,7 +88,7 @@ fun AppLoginScreen(
                 onClick = onRegisterClick
             ) {
                 Text(
-                    text = "Register",
+                    text = "Registrarse",
                     fontSize = 12.sp
                 )
             }
