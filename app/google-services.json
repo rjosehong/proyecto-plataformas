@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "78592401907",
+    "project_id": "uvg-tours",
+    "storage_bucket": "uvg-tours.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:78592401907:android:58dbabe0d7c5afed1cb286",
+        "android_client_info": {
+          "package_name": "plat.lab3.proyecto_plataformas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA23SknT9iIRBLfpPsT60CU0C-YXD25-M0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
