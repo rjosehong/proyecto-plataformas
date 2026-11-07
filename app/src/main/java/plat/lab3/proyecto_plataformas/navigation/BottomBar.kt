@@ -32,13 +32,13 @@ fun BottomBar(navController: NavController) {
     val currentDestination = backStackEntry?.destination
 
     val items = listOf(
-        BottomNavItem("Tours", ToursTab, ToursTab::class) {
+        BottomNavItem("Tours", ToursTabRoute, ToursTabRoute::class) {
             Icon(painterResource(id = R.drawable.calendar), contentDescription = null, modifier = Modifier.size(24.dp))
         },
-        BottomNavItem("Feedback", FeedbackTab, FeedbackTab::class) {
+        BottomNavItem("Feedback", FeedbackTabRoute, FeedbackTabRoute::class) {
             Icon(painterResource(R.drawable.calendar), contentDescription = null, modifier = Modifier.size(24.dp))
         },
-        BottomNavItem("Profile", ProfileTab, ProfileTab::class) {
+        BottomNavItem("Profile", ProfileTabRoute, ProfileTabRoute::class) {
             Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(24.dp))
         }
     )
@@ -51,7 +51,7 @@ fun BottomBar(navController: NavController) {
                 onClick = {
                     if (!selected) {
                         navController.navigate(item.route) {
-                            popUpTo<ToursTab> { saveState = true }
+                            popUpTo<ToursTabRoute> { saveState = true }
                             launchSingleTop = true
                             restoreState = true
                         }

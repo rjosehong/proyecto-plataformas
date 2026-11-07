@@ -1,4 +1,4 @@
-package plat.lab3.proyecto_plataformas.ui.screens.usuarios
+package plat.lab3.proyecto_plataformas.ui.screens.usuarios.ratetour
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,16 +10,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import plat.lab3.proyecto_plataformas.R
-import plat.lab3.proyecto_plataformas.ui.theme.ProyectoplataformasTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RateTourScreen(modifier: Modifier = Modifier) {
+fun RateTourScreen(
+    viewModel: RateTourViewModel = viewModel(),
+    modifier: Modifier = Modifier
+) {
+    val state by viewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -36,18 +39,6 @@ fun RateTourScreen(modifier: Modifier = Modifier) {
                 )
                 HorizontalDivider()
                 NavigationDrawerItem(
-                    label = { Text("Inicio") },
-                    selected = false,
-                    onClick = { scope.launch { drawerState.close() } },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Tours Asignados") },
-                    selected = false,
-                    onClick = { scope.launch { drawerState.close() } },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
                     label = { Text("Calificar Tour") },
                     selected = true,
                     onClick = { scope.launch { drawerState.close() } },
@@ -61,12 +52,11 @@ fun RateTourScreen(modifier: Modifier = Modifier) {
                 TopAppBar(
                     title = { Text("Calificar Tour") },
                     navigationIcon = {
-                        IconButton(onClick = {
-                            scope.launch { drawerState.open() }
-                        }) {
-                            Icon(modifier = Modifier.fillMaxSize(0.8f),
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(
+                                modifier = Modifier.fillMaxSize(0.8f),
                                 painter = painterResource(id = R.drawable.icon_menu),
-                                contentDescription = "Menu"
+                                contentDescription = "Menú"
                             )
                         }
                     },
@@ -111,8 +101,8 @@ fun RateTourScreen(modifier: Modifier = Modifier) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Selecciona el tour que tomaste",
-                                color = Color.DarkGray,
+                                text = if (state.selectedTour.isEmpty()) "Selecciona el tour que tomaste" else state.selectedTour,
+                                color = if (state.selectedTour.isEmpty()) Color.DarkGray else Color.Black,
                                 fontSize = 14.sp
                             )
                             Text(text = "▾", color = Color.Gray, fontSize = 16.sp)
@@ -134,41 +124,42 @@ fun RateTourScreen(modifier: Modifier = Modifier) {
                             .fillMaxWidth()
                             .padding(18.dp)
                     ) {
-                        Text(
-                            text = "¿Cómo estuvo el tour? Escribe tus comentarios...",
-                            color = Color.Gray,
-                            fontSize = 14.sp
+                        OutlinedTextField(
+                            value = state.comments,
+                            onValueChange = { viewModel.onEvent(RateTourEvent.CommentsChanged(it)) },
+                            placeholder = { Text("¿Cómo estuvo el tour? Escribe tus comentarios...") },
+                            modifier = Modifier.fillMaxSize(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = Color.Transparent
+                            )
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Botón principal
+                // Botón principal dirigido por los eventos
                 Button(
-                    onClick = { },
+                    onClick = { viewModel.onEvent(RateTourEvent.SubmitRating) },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B4332)),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
                 ) {
-                    Text(
-                        text = "Enviar Calificación",
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (state.isLoading) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    } else {
+                        Text(
+                            text = "Enviar Calificación",
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun RateTourPreview() {
-    ProyectoplataformasTheme(darkTheme = false) {
-        RateTourScreen()
     }
 }
