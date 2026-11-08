@@ -55,8 +55,7 @@ fun AsignacionTourScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(top = 8.dp, start = 8.dp, end = 8.dp),
+                .padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TabRow(selectedTabIndex = state.selectedTab) {
@@ -91,7 +90,9 @@ fun AsignacionTourScreen(
                             if (mine != null) {
                                 TuTourMasRecienteContent(card = mine)
                             } else {
-                                Text("No tienes tours asignados", modifier = Modifier.padding(16.dp))
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Text("No tienes tours asignados", modifier = Modifier.padding(16.dp))
+                                }
                             }
                         }
                     }
@@ -103,20 +104,83 @@ fun AsignacionTourScreen(
 
 @Composable
 fun TourFeedContent(cards: List<Tour>, onClaim: (Int) -> Unit) {
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = "Asígnate un Tour",
-            fontSize = 50.sp,
-            fontWeight = FontWeight.Bold,
-            lineHeight = 56.sp
-        )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF4F6F8))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1B4332)),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+                Text(
+                    text = "BIENVENIDO A UVG-TOURS",
+                    color = Color(0xFF95D5B2),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Explora y programa",
+                    color = Color.White,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Asígnate un tour y gestiona tus actividades del campus.",
+                    color = Color(0xFFD8F3DC),
+                    fontSize = 13.sp
+                )
+            }
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Surface(
+                color = Color.Black,
+                shape = RoundedCornerShape(50.dp)
+            ) {
+                Text(
+                    text = "Todos",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+            Surface(
+                color = Color(0xFFE2E8F0),
+                shape = RoundedCornerShape(50.dp)
+            ) {
+                Text(
+                    text = "Disponibles",
+                    color = Color.DarkGray,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
 
         LazyColumn(
             modifier = Modifier
-                .padding(start = 8.dp, end = 8.dp, top = 8.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(cards) { card ->
                 TourFeedCardItem(card = card, onClaim = onClaim)
@@ -129,82 +193,82 @@ fun TourFeedContent(cards: List<Tour>, onClaim: (Int) -> Unit) {
 fun TourFeedCardItem(card: Tour, onClaim: (Int) -> Unit) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = Color.White
         ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(16.dp),
         modifier = Modifier
-            .width(400.dp)
-            .height(150.dp)
+            .fillMaxWidth()
+            .height(160.dp)
     ) {
-        Column(modifier = Modifier.padding(4.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .wrapContentSize()
-                        .background(MaterialTheme.colorScheme.secondary)
-                        .padding(horizontal = 4.dp)
+                Surface(
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
                         text = "+${card.horas} horas de servicio",
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .wrapContentSize()
-                        .background(MaterialTheme.colorScheme.tertiary)
-                        .padding(horizontal = 4.dp)
+                Surface(
+                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
                         text = "${card.personas_registradas} espacio disponible",
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.tertiary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
             }
+
             Text(
                 text = card.tour_nombre,
-                fontSize = 24.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 4.dp)
+                color = Color.Black
             )
+
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.Bottom,
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .wrapContentSize()
-                        .background(MaterialTheme.colorScheme.secondary)
+                Surface(
+                    color = if (card.guia_necesitado > 0) Color(0xFFD4A373).copy(alpha = 0.15f) else Color(0xFF2D6A4F).copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(6.dp)
                 ) {
-                    if (card.guia_necesitado > 0) {
-                        Text(
-                            text = "${card.guia_necesitado} Guía Necesitado",
-                            color = Color.White
-                        )
-                    } else {
-                        Text(
-                            text = "${card.persona_asignada} Asignado",
-                            color = Color.White
-                        )
-                    }
+                    Text(
+                        text = if (card.guia_necesitado > 0) "${card.guia_necesitado} Guía Necesitado" else "${card.persona_asignada} Asignado",
+                        color = if (card.guia_necesitado > 0) Color(0xFFD4A373) else Color(0xFF2D6A4F),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
                 }
 
                 Button(
-                    modifier = Modifier.wrapContentSize(),
-                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                     onClick = { onClaim(card.tourId) }
                 ) {
                     Text(
                         text = "Reclamar espacio",
-                        fontSize = 18.sp
+                        fontSize = 14.sp
                     )
                 }
             }
@@ -219,25 +283,30 @@ fun TuTourMasRecienteContent(card: Tour) {
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize().padding(8.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF4F6F8))
+            .padding(16.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
         ) {
             Icon(
                 modifier = Modifier
-                    .size(25.dp)
-                    .padding(horizontal = 3.dp, vertical = 2.dp),
+                    .size(22.dp)
+                    .padding(end = 4.dp),
                 painter = painterResource(id = R.drawable.urgent_notification),
-                contentDescription = "Menú"
+                contentDescription = "Notificación"
             )
             Text(
                 text = "Siguiente Tour Asignado",
-                modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
             )
         }
 
@@ -245,12 +314,15 @@ fun TuTourMasRecienteContent(card: Tour) {
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
             ),
-            modifier = Modifier.size(width = 400.dp, height = 230.dp)
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(16.dp))
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.cit_uvg),
@@ -261,7 +333,7 @@ fun TuTourMasRecienteContent(card: Tour) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(12.dp),
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
@@ -291,7 +363,7 @@ fun TuTourMasRecienteContent(card: Tour) {
                     Column {
                         Text(
                             text = card.tour_nombre,
-                            fontSize = 28.sp,
+                            fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
@@ -301,7 +373,7 @@ fun TuTourMasRecienteContent(card: Tour) {
                         ) {
                             Icon(
                                 modifier = Modifier
-                                    .size(18.dp)
+                                    .size(16.dp)
                                     .padding(end = 2.dp),
                                 painter = painterResource(id = R.drawable.location),
                                 contentDescription = null,
@@ -314,7 +386,7 @@ fun TuTourMasRecienteContent(card: Tour) {
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically
@@ -322,14 +394,14 @@ fun TuTourMasRecienteContent(card: Tour) {
                             Image(
                                 painter = painterResource(id = R.drawable.person),
                                 contentDescription = null,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 text = "${card.personas_registradas} personas registradas al tour",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
+                                fontSize = 12.sp
                             )
                         }
                     }

@@ -33,7 +33,7 @@ fun ScoresScreen(
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White,
+                    titleContentColor = MaterialTheme.colorScheme.primaryContainer,
                 ),
                 title = { Text("UVG–Tours") }
             )
@@ -42,15 +42,17 @@ fun ScoresScreen(
         Column(
             modifier = modifier
                 .fillMaxSize()
+                .background(Color(0xFFF4F6F8))
                 .padding(innerPadding)
-                .padding(top = 8.dp, start = 8.dp, end = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(16.dp),
+            horizontalAlignment = Alignment.Start
         ) {
             Text(
                 text = "Tu calificación como guía",
-                fontSize = 50.sp,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                lineHeight = 53.sp
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
             when {
@@ -67,9 +69,9 @@ fun ScoresScreen(
                 else -> {
                     LazyColumn(
                         modifier = Modifier
-                            .padding(start = 8.dp, end = 8.dp, top = 8.dp)
-                            .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .fillMaxWidth()
+                            .weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(state.calificaciones) { card ->
                             ScoreCardItem(card = card)
@@ -85,35 +87,50 @@ fun ScoresScreen(
 fun ScoreCardItem(card: calificacionGuia) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.onSurface
+            containerColor = Color.White
         ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(16.dp),
         modifier = Modifier
-            .width(400.dp)
-            .height(150.dp)
+            .fillMaxWidth()
+            .height(130.dp)
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .padding(8.dp)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.onTertiary)
-                .clip(RoundedCornerShape(4.dp))
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                verticalArrangement = Arrangement.Center
             ) {
-                Column {
-                    Text(text = "Calificación como guía de tour", fontSize = 16.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "${card.calificacion} / 100",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = "Calificación como guía de tour",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "${card.calificacion} / 100",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+            }
+
+            Surface(
+                color = Color(0xFF2D6A4F).copy(alpha = 0.15f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "Excelente",
+                    color = Color(0xFF2D6A4F),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                )
             }
         }
     }

@@ -1,8 +1,10 @@
 package plat.lab3.proyecto_plataformas.ui.screens.admins.asignacionhoras
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -37,20 +39,21 @@ fun AsignacionHorasScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color(0xFFF4F6F8))
                 .padding(innerPadding)
-                .padding(top = 8.dp, start = 8.dp, end = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(16.dp),
+            horizontalAlignment = Alignment.Start
         ) {
             Text(
                 text = "Horas por Asignar",
-                fontSize = 50.sp,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                lineHeight = 53.sp
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
             when {
                 state.isLoading -> {
-                    // Loading
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -59,7 +62,6 @@ fun AsignacionHorasScreen(
                     }
                 }
                 state.errorMessage != null -> {
-                    // Error
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -72,12 +74,11 @@ fun AsignacionHorasScreen(
                     }
                 }
                 else -> {
-                    // Data
                     LazyColumn(
                         modifier = Modifier
-                            .padding(start = 8.dp, end = 8.dp, top = 8.dp)
-                            .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .fillMaxWidth()
+                            .weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(state.data) { card ->
                             AsignacionHorasCardItem(card = card)
@@ -92,15 +93,50 @@ fun AsignacionHorasScreen(
 @Composable
 fun AsignacionHorasCardItem(card: CuadroHoras) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(110.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(text = card.tour_nombre, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text(text = "Asignado a: ${card.persona_asignada}")
-            Text(text = "Horas: +${card.horas}h")
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = card.tour_nombre,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Asignado a: ${card.persona_asignada}",
+                    fontSize = 13.sp,
+                    color = Color.Gray
+                )
+            }
+
+            Surface(
+                color = Color(0xFF2D6A4F).copy(alpha = 0.15f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "+${card.horas}h",
+                    color = Color(0xFF2D6A4F),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                )
+            }
         }
     }
 }

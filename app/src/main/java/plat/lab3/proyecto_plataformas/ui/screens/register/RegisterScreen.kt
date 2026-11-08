@@ -1,6 +1,8 @@
 package plat.lab3.proyecto_plataformas.ui.screens.register
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -8,9 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,55 +26,86 @@ fun AppRegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFF4F6F8))
             .statusBarsPadding()
-            .navigationBarsPadding()
+            .navigationBarsPadding(),
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .wrapContentHeight()
         ) {
-            Text(
-                text = "Crea tu cuenta",
-                fontSize = 48.sp,
-                style = TextStyle(
-                    color = MaterialTheme.colorScheme.primary,
-                    drawStyle = Stroke(width = 15f, join = StrokeJoin.Round)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Crea tu cuenta",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
                 )
-            )
-            Spacer(modifier = Modifier.padding(16.dp))
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Regístrate en UVG-Tours",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(24.dp))
 
-            if (state.errorMessage != null) {
-                Text(text = state.errorMessage!!, color = Color.Red, modifier = Modifier.padding(bottom = 8.dp))
-            }
+                if (state.errorMessage != null) {
+                    Text(
+                        text = state.errorMessage!!,
+                        color = Color.Red,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                }
 
-            OutlinedTextField(
-                value = state.email,
-                onValueChange = { viewModel.onEvent(RegisterEvent.EmailChanged(it)) },
-                singleLine = true,
-                label = { Text("Correo Electrónico") },
-                modifier = Modifier.fillMaxWidth(0.8f)
-            )
-            Spacer(modifier = Modifier.padding(top = 4.dp))
-            OutlinedTextField(
-                value = state.password,
-                onValueChange = { viewModel.onEvent(RegisterEvent.PasswordChanged(it)) },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                label = { Text("Contraseña") },
-                modifier = Modifier.fillMaxWidth(0.8f)
-            )
+                OutlinedTextField(
+                    value = state.email,
+                    onValueChange = { viewModel.onEvent(RegisterEvent.EmailChanged(it)) },
+                    singleLine = true,
+                    label = { Text("Correo Electrónico") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = state.password,
+                    onValueChange = { viewModel.onEvent(RegisterEvent.PasswordChanged(it)) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    label = { Text("Contraseña") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Spacer(modifier = Modifier.padding(top = 8.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            if (state.isLoading) {
-                CircularProgressIndicator()
-            } else {
-                FilledTonalButton(
-                    modifier = Modifier.fillMaxWidth(0.4f),
-                    onClick = { viewModel.onEvent(RegisterEvent.SubmitRegister(onRegisterDone)) }
-                ) {
-                    Text("Registrarse")
+                if (state.isLoading) {
+                    CircularProgressIndicator()
+                } else {
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        onClick = { viewModel.onEvent(RegisterEvent.SubmitRegister(onRegisterDone)) }
+                    ) {
+                        Text(
+                            text = "Registrarse",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

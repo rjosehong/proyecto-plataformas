@@ -1,8 +1,10 @@
 package plat.lab3.proyecto_plataformas.ui.screens.admins.gestionadmin
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -32,7 +34,7 @@ fun GestionAdminScreen(
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White,
+                    titleContentColor = MaterialTheme.colorScheme.primaryContainer,
                 ),
                 title = { Text("UVG–Tours") }
             )
@@ -41,15 +43,17 @@ fun GestionAdminScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color(0xFFF4F6F8))
                 .padding(innerPadding)
-                .padding(top = 8.dp, start = 8.dp, end = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(16.dp),
+            horizontalAlignment = Alignment.Start
         ) {
             Text(
                 text = "Horas por Asignar",
-                fontSize = 50.sp,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                lineHeight = 53.sp
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
             when {
@@ -66,9 +70,9 @@ fun GestionAdminScreen(
                 else -> {
                     LazyColumn(
                         modifier = Modifier
-                            .padding(start = 8.dp, end = 8.dp, top = 8.dp)
-                            .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .fillMaxWidth()
+                            .weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(state.adminData) { card ->
                             GestionAdminCardItem(card = card)
@@ -84,77 +88,109 @@ fun GestionAdminScreen(
 fun GestionAdminCardItem(card: Admin) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = Color.White
         ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(16.dp),
         modifier = Modifier
-            .width(400.dp)
-            .height(400.dp)
+            .fillMaxWidth()
+            .height(200.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp, horizontal = 8.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Box(modifier = Modifier.fillMaxWidth(0.5f)) {
-                    Column {
-                        Text("Tours semanales")
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(SpanStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)) {
-                                    append("${card.tours_semanales}")
-                                }
-                                append(" programados")
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Tours semanales",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(SpanStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)) {
+                                append("${card.tours_semanales}")
                             }
-                        )
-                    }
+                            append(" programados")
+                        },
+                        fontSize = 14.sp,
+                        color = Color.DarkGray
+                    )
                 }
-                Box(modifier = Modifier.fillMaxWidth(0.5f)) {
-                    Column {
-                        Text("Tours sin asignar")
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(SpanStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)) {
-                                    append("${card.tours_noAsignados}")
-                                }
-                                append(" por asignar")
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Tours sin asignar",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(SpanStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFD4A373))) {
+                                append("${card.tours_noAsignados}")
                             }
-                        )
-                    }
+                            append(" por asignar")
+                        },
+                        fontSize = 14.sp,
+                        color = Color.DarkGray
+                    )
                 }
             }
+
+            Divider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp, horizontal = 8.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Box(modifier = Modifier.fillMaxWidth(0.5f)) {
-                    Column {
-                        Text("Pendiente de asignar")
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(SpanStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)) {
-                                    append("${card.tours_completos_por_asignar}")
-                                }
-                                append(" completos por asignar")
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Pendiente de asignar",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(SpanStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)) {
+                                append("${card.tours_completos_por_asignar}")
                             }
-                        )
-                    }
+                            append(" completos")
+                        },
+                        fontSize = 14.sp,
+                        color = Color.DarkGray
+                    )
                 }
-                Box(modifier = Modifier.fillMaxWidth(0.5f)) {
-                    Column {
-                        Text("Guías")
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(SpanStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)) {
-                                    append("${card.tours_semanales}")
-                                }
-                                append(" guías de tour")
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Guías",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(SpanStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2D6A4F))) {
+                                append("${card.tours_semanales}")
                             }
-                        )
-                    }
+                            append(" guías")
+                        },
+                        fontSize = 14.sp,
+                        color = Color.DarkGray
+                    )
                 }
             }
         }
