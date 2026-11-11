@@ -1,14 +1,12 @@
 package plat.lab3.proyecto_plataformas.ui.screens.login
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import plat.lab3.proyecto_plataformas.navigation.Role
+import plat.lab3.proyecto_plataformas.data.auth.AuthRepository
+import plat.lab3.proyecto_plataformas.data.auth.authErrorMessage
 
 class LoginViewModel : ViewModel() {
 
@@ -24,12 +22,24 @@ class LoginViewModel : ViewModel() {
                 _uiState.update { it.copy(password = event.password) }
             }
             is LoginEvent.SubmitLogin -> {
-                viewModelScope.launch {
-                    _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val current = _uiState.value
+                if (current.email.isBlank() || current.password.isBlank()) {
+                    _uiState.update { it.copy(errorMessage = "Ingresa tu correo y tu contraseña") }
+                    return
+                }
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-                    delay(1000)
-
-                    event.onEnterClick(event.role)
+                AuthRepository.login(current.email, current.password) { result ->
+                    result
+                        .onSuccess { role ->
+                            _uiState.update { it.copy(isLoading = false) }
+                            event.onEnterClick(role)
+                        }
+                        .onFailure { error ->
+                            _uiState.update {
+                                it.copy(isLoading = false, errorMessage = authErrorMessage(error))
+                            }
+                        }
                 }
             }
             is LoginEvent.OnRegisterClicked -> {

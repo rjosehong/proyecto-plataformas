@@ -1,16 +1,23 @@
 package plat.lab3.proyecto_plataformas.ui.screens.estudiantes.scores
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
-import plat.lab3.proyecto_plataformas.data.ejemplos.ejemploCalificacion
+import kotlinx.coroutines.launch
+import plat.lab3.proyecto_plataformas.data.firestore.ToursRepository
+import plat.lab3.proyecto_plataformas.data.firestore.firestoreErrorMessage
 
 class ScoresViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(ScoresState())
     val uiState: StateFlow<ScoresState> = _uiState.asStateFlow()
+
+    private var loadJob: Job? = null
 
     init {
         loadScores()
@@ -25,22 +32,20 @@ class ScoresViewModel : ViewModel() {
     }
 
     private fun loadScores() {
+        loadJob?.cancel()
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-        try {
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    calificaciones = ejemploCalificacion,
-                    errorMessage = null
-                )
-            }
-        } catch (e: Exception) {
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    errorMessage = e.localizedMessage ?: "Error al cargar las calificaciones"
-                )
-            }
+        loadJob = viewModelScope.launch {
+            ToursRepository.calificaciones()
+                .catch { e ->
+                    _uiState.update {
+                        it.copy(isLoading = false, errorMessage = firestoreErrorMessage(e))
+                    }
+                }
+                .collect { calificaciones ->
+                    _uiState.update {
+                        it.copy(isLoading = false, calificaciones = calificaciones, errorMessage = null)
+                    }
+                }
         }
     }
 }

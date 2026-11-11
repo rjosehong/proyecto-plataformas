@@ -1,13 +1,12 @@
 package plat.lab3.proyecto_plataformas.ui.screens.register
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import plat.lab3.proyecto_plataformas.data.auth.AuthRepository
+import plat.lab3.proyecto_plataformas.data.auth.authErrorMessage
 
 class RegisterViewModel : ViewModel() {
 
@@ -23,11 +22,30 @@ class RegisterViewModel : ViewModel() {
                 _uiState.update { it.copy(password = event.password) }
             }
             is RegisterEvent.SubmitRegister -> {
-                viewModelScope.launch {
-                    _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-                    delay(1000)
-                    _uiState.update { it.copy(isLoading = false) }
-                    event.onRegisterDone()
+                val current = _uiState.value
+                if (current.email.isBlank() || current.password.isBlank()) {
+                    _uiState.update { it.copy(errorMessage = "Completa todos los campos") }
+                    return
+                }
+                if (current.password.length < 6) {
+                    _uiState.update {
+                        it.copy(errorMessage = "La contraseña debe tener al menos 6 caracteres")
+                    }
+                    return
+                }
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+                AuthRepository.register(current.email, current.password) { result ->
+                    result
+                        .onSuccess { role ->
+                            _uiState.update { it.copy(isLoading = false) }
+                            event.onRegisterDone(role)
+                        }
+                        .onFailure { error ->
+                            _uiState.update {
+                                it.copy(isLoading = false, errorMessage = authErrorMessage(error))
+                            }
+                        }
                 }
             }
         }

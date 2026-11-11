@@ -77,10 +77,15 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
     //google calendar
     implementation("com.google.android.gms:play-services-auth:22.0.0")
-    implementation("com.google.api-client:google-api-client-android:2.7.2")
-    implementation("com.google.apis:google-api-services-calendar:v3-rev20260925-2.0.0")
+    implementation("com.google.api-client:google-api-client-android:2.7.2") {
+        exclude(group = "io.grpc")
+    }
+    implementation("com.google.apis:google-api-services-calendar:v3-rev20260925-2.0.0") {
+        exclude(group = "io.grpc")
+    }
     //workmanager
     implementation("androidx.work:work-runtime-ktx:2.12.0")
 }

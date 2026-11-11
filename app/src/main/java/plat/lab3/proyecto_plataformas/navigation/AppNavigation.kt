@@ -3,11 +3,14 @@ package plat.lab3.proyecto_plataformas.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import plat.lab3.proyecto_plataformas.data.auth.AuthRepository
+import plat.lab3.proyecto_plataformas.data.firestore.FirestoreSeeder
 import plat.lab3.proyecto_plataformas.ui.screens.admins.asignacionhoras.AsignacionHorasScreen
 import plat.lab3.proyecto_plataformas.ui.screens.admins.gestionadmin.GestionAdminScreen
 import plat.lab3.proyecto_plataformas.ui.screens.estudiantes.asignaciontour.AsignacionTourScreen
@@ -17,6 +20,7 @@ import plat.lab3.proyecto_plataformas.ui.screens.profile.ProfileScreen
 import plat.lab3.proyecto_plataformas.ui.screens.register.AppRegisterScreen
 import plat.lab3.proyecto_plataformas.ui.screens.usuarios.ratetour.RateTourScreen
 import plat.lab3.proyecto_plataformas.ui.screens.usuarios.toursscreen.ToursScreen
+import plat.lab3.proyecto_plataformas.work.RequestNotificationPermission
 
 @Composable
 fun AppNavigation() {
@@ -25,6 +29,14 @@ fun AppNavigation() {
     NavHost(navController = navController, startDestination = LoginRoute) {
 
         composable<LoginRoute> {
+            // Si ya hay una sesión abierta, entra directo al menú
+            LaunchedEffect(Unit) {
+                AuthRepository.currentRole()?.let { role ->
+                    navController.navigate(MenuRoute(role)) {
+                        popUpTo<LoginRoute> { inclusive = true }
+                    }
+                }
+            }
             AppLoginScreen(
                 onEnterClick = { role: Role ->
                     navController.navigate(MenuRoute(role)) {
@@ -37,7 +49,11 @@ fun AppNavigation() {
 
         composable<RegisterRoute> {
             AppRegisterScreen(
-                onRegisterDone = { navController.popBackStack() }
+                onRegisterDone = { role: Role ->
+                    navController.navigate(MenuRoute(role)) {
+                        popUpTo<LoginRoute> { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -59,6 +75,9 @@ fun AppNavigation() {
 @Composable
 private fun MainTabs(role: Role, onLogoutClick: () -> Unit) {
     val tabsNavController = rememberNavController()
+    LaunchedEffect(Unit) {
+        FirestoreSeeder.seedIfEmpty()
+    }
 
     Scaffold(
         bottomBar = { BottomBar(tabsNavController) }

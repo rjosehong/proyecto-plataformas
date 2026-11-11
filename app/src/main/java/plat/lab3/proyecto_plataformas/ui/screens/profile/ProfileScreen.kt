@@ -67,6 +67,13 @@ fun ProfileScreen(
                 Text("Carné:")
                 Text(state.carne)
             }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Correo:")
+                Text(state.email)
+            }
             Spacer(Modifier.height(24.dp))
             OutlinedButton(onClick = {
                 viewModel.onEvent(ProfileEvent.Logout(onLogoutClick))

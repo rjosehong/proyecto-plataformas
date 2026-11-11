@@ -15,11 +15,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import plat.lab3.proyecto_plataformas.navigation.Role
 
 @Composable
 fun AppRegisterScreen(
     viewModel: RegisterViewModel = viewModel(),
-    onRegisterDone: () -> Unit
+    onRegisterDone: (Role) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 
