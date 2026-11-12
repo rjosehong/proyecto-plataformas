@@ -15,16 +15,24 @@ class RegisterViewModel : ViewModel() {
 
     fun onEvent(event: RegisterEvent) {
         when (event) {
+            is RegisterEvent.NombreChanged -> {
+                _uiState.update { it.copy(nombre = event.nombre) }
+            }
             is RegisterEvent.EmailChanged -> {
                 _uiState.update { it.copy(email = event.email) }
             }
             is RegisterEvent.PasswordChanged -> {
                 _uiState.update { it.copy(password = event.password) }
             }
+            is RegisterEvent.CarneChanged -> {
+                _uiState.update { it.copy(carne = event.carne) }
+            }
             is RegisterEvent.SubmitRegister -> {
                 val current = _uiState.value
-                if (current.email.isBlank() || current.password.isBlank()) {
-                    _uiState.update { it.copy(errorMessage = "Completa todos los campos") }
+                if (current.nombre.isBlank() || current.email.isBlank() || current.password.isBlank()) {
+                    _uiState.update {
+                        it.copy(errorMessage = "Completa tu nombre, correo y contraseña")
+                    }
                     return
                 }
                 if (current.password.length < 6) {
@@ -35,7 +43,12 @@ class RegisterViewModel : ViewModel() {
                 }
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-                AuthRepository.register(current.email, current.password) { result ->
+                AuthRepository.register(
+                    email = current.email,
+                    password = current.password,
+                    nombre = current.nombre,
+                    carne = current.carne
+                ) { result ->
                     result
                         .onSuccess { role ->
                             _uiState.update { it.copy(isLoading = false) }

@@ -6,8 +6,8 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import plat.lab3.proyecto_plataformas.data.firestore.UsersRepository
 import plat.lab3.proyecto_plataformas.navigation.Role
-
 private val adminEmails = setOf("admin@uvg.edu.gt")
 private val guideEmails = setOf("guia@uvg.edu.gt")
 
@@ -23,6 +23,8 @@ object AuthRepository {
 
     fun currentEmail(): String? = auth.currentUser?.email
 
+    fun currentUid(): String? = auth.currentUser?.uid
+
     fun currentRole(): Role? = currentEmail()?.let { roleForEmail(it) }
 
     fun login(email: String, password: String, onResult: (Result<Role>) -> Unit) {
@@ -31,9 +33,20 @@ object AuthRepository {
             .addOnFailureListener { onResult(Result.failure(it)) }
     }
 
-    fun register(email: String, password: String, onResult: (Result<Role>) -> Unit) {
+    fun register(
+        email: String,
+        password: String,
+        nombre: String,
+        carne: String,
+        onResult: (Result<Role>) -> Unit
+    ) {
         auth.createUserWithEmailAndPassword(email.trim(), password)
-            .addOnSuccessListener { onResult(Result.success(roleForEmail(email))) }
+            .addOnSuccessListener { result ->
+                result.user?.uid?.let { uid ->
+                    UsersRepository.saveProfile(uid, email, nombre, carne)
+                }
+                onResult(Result.success(roleForEmail(email)))
+            }
             .addOnFailureListener { onResult(Result.failure(it)) }
     }
 
