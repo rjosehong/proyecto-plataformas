@@ -2,26 +2,33 @@ package plat.lab3.proyecto_plataformas.ui.screens.estudiantes.asignaciontour
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import plat.lab3.proyecto_plataformas.R
+import plat.lab3.proyecto_plataformas.data.calendar.CalendarHelper
+import plat.lab3.proyecto_plataformas.data.calendar.rememberCalendarAuthorizer
 import plat.lab3.proyecto_plataformas.data.ejemplos.Tour
+import plat.lab3.proyecto_plataformas.work.RequestNotificationPermission
+import plat.lab3.proyecto_plataformas.work.scheduleTourReminder
 
 private fun formatHora(hora: Int): String {
     val periodo = if (hora >= 12) "PM" else "AM"
@@ -39,8 +46,53 @@ fun AsignacionTourScreen(
     viewModel: AsignacionTourViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    RequestNotificationPermission()
+
+    val authorizeCalendar = rememberCalendarAuthorizer(
+        onToken = { token ->
+            val tourToSync = state.claimedTourForSync
+            if (tourToSync != null) {
+                scope.launch {
+                    val link = withContext(Dispatchers.IO) {
+                        runCatching { CalendarHelper.insertTourEvent(token, tourToSync) }.getOrNull()
+                    }
+                    scheduleTourReminder(context, tourToSync)
+                    viewModel.onEvent(AsignacionTourEvent.ClearClaimedTourForSync)
+                    val msg = if (link != null) {
+                        "Tour agregado a tu Google Calendar y recordatorio listo"
+                    } else {
+                        "Cupo reclamado y recordatorio programado"
+                    }
+                    viewModel.onEvent(AsignacionTourEvent.ShowFeedback(msg))
+                }
+            }
+        },
+        onError = { err ->
+            state.claimedTourForSync?.let { scheduleTourReminder(context, it) }
+            viewModel.onEvent(AsignacionTourEvent.ClearClaimedTourForSync)
+            viewModel.onEvent(AsignacionTourEvent.ShowFeedback(err))
+        }
+    )
+
+    LaunchedEffect(state.claimedTourForSync) {
+        if (state.claimedTourForSync != null) {
+            authorizeCalendar()
+        }
+    }
+
+    LaunchedEffect(state.feedbackMessage) {
+        state.feedbackMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.onEvent(AsignacionTourEvent.ClearFeedback)
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
@@ -84,7 +136,19 @@ fun AsignacionTourScreen(
                 }
                 else -> {
                     when (state.selectedTab) {
-                        0 -> TourFeedContent(cards = state.tours, onClaim = { viewModel.onEvent(AsignacionTourEvent.ClaimSlot(it)) })
+                        0 -> {
+                            val filteredCards = if (state.filterOnlyAvailable) {
+                                state.tours.filter { it.guia_necesitado > 0 }
+                            } else {
+                                state.tours
+                            }
+                            TourFeedContent(
+                                cards = filteredCards,
+                                filterOnlyAvailable = state.filterOnlyAvailable,
+                                onFilterChange = { viewModel.onEvent(AsignacionTourEvent.SetFilterAvailable(it)) },
+                                onClaim = { viewModel.onEvent(AsignacionTourEvent.ClaimSlot(it)) }
+                            )
+                        }
                         1 -> {
                             val mine = state.tours.firstOrNull { it.guia_necesitado == 0 }
                             if (mine != null) {
@@ -103,7 +167,12 @@ fun AsignacionTourScreen(
 }
 
 @Composable
-fun TourFeedContent(cards: List<Tour>, onClaim: (Int) -> Unit) {
+fun TourFeedContent(
+    cards: List<Tour>,
+    filterOnlyAvailable: Boolean,
+    onFilterChange: (Boolean) -> Unit,
+    onClaim: (Int) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -148,24 +217,26 @@ fun TourFeedContent(cards: List<Tour>, onClaim: (Int) -> Unit) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Surface(
-                color = Color.Black,
-                shape = RoundedCornerShape(50.dp)
+                color = if (!filterOnlyAvailable) Color.Black else Color(0xFFE2E8F0),
+                shape = RoundedCornerShape(50.dp),
+                modifier = Modifier.clickable { onFilterChange(false) }
             ) {
                 Text(
                     text = "Todos",
-                    color = Color.White,
+                    color = if (!filterOnlyAvailable) Color.White else Color.DarkGray,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
             Surface(
-                color = Color(0xFFE2E8F0),
-                shape = RoundedCornerShape(50.dp)
+                color = if (filterOnlyAvailable) Color.Black else Color(0xFFE2E8F0),
+                shape = RoundedCornerShape(50.dp),
+                modifier = Modifier.clickable { onFilterChange(true) }
             ) {
                 Text(
                     text = "Disponibles",
-                    color = Color.DarkGray,
+                    color = if (filterOnlyAvailable) Color.White else Color.DarkGray,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -175,15 +246,38 @@ fun TourFeedContent(cards: List<Tour>, onClaim: (Int) -> Unit) {
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(cards) { card ->
-                TourFeedCardItem(card = card, onClaim = onClaim)
+        if (cards.isEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Actualmente no hay tours disponibles",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(cards) { card ->
+                    TourFeedCardItem(card = card, onClaim = onClaim)
+                }
             }
         }
     }
@@ -192,9 +286,7 @@ fun TourFeedContent(cards: List<Tour>, onClaim: (Int) -> Unit) {
 @Composable
 fun TourFeedCardItem(card: Tour, onClaim: (Int) -> Unit) {
     Card(
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
@@ -228,7 +320,7 @@ fun TourFeedCardItem(card: Tour, onClaim: (Int) -> Unit) {
                     shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
-                        text = "${card.personas_registradas} espacio disponible",
+                        text = "${card.personas_registradas} inscritos",
                         color = MaterialTheme.colorScheme.tertiary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
@@ -263,11 +355,12 @@ fun TourFeedCardItem(card: Tour, onClaim: (Int) -> Unit) {
                 }
 
                 Button(
+                    enabled = card.guia_necesitado > 0,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                     onClick = { onClaim(card.tourId) }
                 ) {
                     Text(
-                        text = "Reclamar espacio",
+                        text = if (card.guia_necesitado > 0) "Reclamar espacio" else "Asignado",
                         fontSize = 14.sp
                     )
                 }

@@ -11,13 +11,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import plat.lab3.proyecto_plataformas.data.ejemplos.calificacionGuia
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,6 +25,7 @@ fun ScoresScreen(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsState()
+    val greenDark = Color(0xFF1B4332)
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -33,48 +33,163 @@ fun ScoresScreen(
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = Color.White,
                 ),
                 title = { Text("UVG–Tours") }
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .background(Color(0xFFF4F6F8))
-                .padding(innerPadding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = "Tu calificación como guía",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            when {
-                state.isLoading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+        when {
+            state.isLoading -> {
+                Box(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .background(Color(0xFFF4F6F8))
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = greenDark)
                 }
-                state.errorMessage != null -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = state.errorMessage!!, color = Color.Red)
-                    }
+            }
+            state.errorMessage != null -> {
+                Box(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .background(Color(0xFFF4F6F8))
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = state.errorMessage!!,
+                        color = Color.Red,
+                        modifier = Modifier.padding(16.dp)
+                    )
                 }
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+            }
+            else -> {
+                Column(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .background(Color(0xFFF4F6F8))
+                        .padding(innerPadding)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = greenDark),
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(state.calificaciones) { card ->
-                            ScoreCardItem(card = card)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "RENDIMIENTO DEL GUÍA",
+                                        color = Color(0xFF95D5B2),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = state.guideName,
+                                        color = Color.White,
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    if (state.guideEmail.isNotBlank()) {
+                                        Text(
+                                            text = state.guideEmail,
+                                            color = Color(0xFFD8F3DC),
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    color = Color.White.copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.End,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = String.format(Locale.US, "%.1f", state.promedioTotal),
+                                            color = Color.White,
+                                            fontSize = 24.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "de 100 pts",
+                                            color = Color(0xFF95D5B2),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                }
+                            }
+
+                            HorizontalDivider(color = Color.White.copy(alpha = 0.15f))
+
+                            val resumenEvaluaciones = when (state.totalEvaluaciones) {
+                                0 -> "Aún no tienes evaluaciones registradas"
+                                1 -> "Basado en 1 evaluación recibida"
+                                else -> "Basado en ${state.totalEvaluaciones} evaluaciones recibidas"
+                            }
+                            Text(
+                                text = resumenEvaluaciones,
+                                color = Color(0xFFD8F3DC),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "Calificaciones recientes",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    if (state.calificacionesRecientes.isEmpty()) {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Todavía no has recibido calificaciones en tus tours.",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            items(state.calificacionesRecientes) { item ->
+                                GuiaRatingCardItem(item = item)
+                            }
                         }
                     }
                 }
@@ -84,52 +199,66 @@ fun ScoresScreen(
 }
 
 @Composable
-fun ScoreCardItem(card: calificacionGuia) {
+private fun GuiaRatingCardItem(item: GuiaRatingItem) {
     Card(
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(130.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(
-                verticalArrangement = Arrangement.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Calificación como guía de tour",
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "${card.calificacion} / 100",
-                    fontSize = 28.sp,
+                    text = item.tourNombre,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = Color.Black,
+                    modifier = Modifier.weight(1f)
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Surface(
+                    color = Color(0xFF2D6A4F).copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = String.format(Locale.US, "%.1f / 100", item.calificacion),
+                        color = Color(0xFF2D6A4F),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    )
+                }
             }
 
-            Surface(
-                color = Color(0xFF2D6A4F).copy(alpha = 0.15f),
-                shape = RoundedCornerShape(8.dp)
-            ) {
+            if (item.comentario.isNotBlank()) {
+                Surface(
+                    color = Color(0xFFF4F6F8),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "\"${item.comentario}\"",
+                        fontSize = 13.sp,
+                        color = Color.DarkGray,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+            } else {
                 Text(
-                    text = "Excelente",
-                    color = Color(0xFF2D6A4F),
+                    text = "Sin comentarios adicionales",
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    color = Color.Gray
                 )
             }
         }

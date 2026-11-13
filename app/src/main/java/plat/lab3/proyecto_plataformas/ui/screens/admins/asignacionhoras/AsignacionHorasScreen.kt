@@ -16,7 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import plat.lab3.proyecto_plataformas.data.ejemplos.CuadroHoras
+import plat.lab3.proyecto_plataformas.data.ejemplos.calificacionGuia
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,15 +25,17 @@ fun AsignacionHorasScreen(
     viewModel: AsignacionHorasViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val greenDark = Color(0xFF1B4332)
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White,
                 ),
-                title = { Text("UVG–Tours") }
+                title = { Text("UVG–Tours (Panel Admin)") }
             )
         }
     ) { innerPadding ->
@@ -41,16 +44,19 @@ fun AsignacionHorasScreen(
                 .fillMaxSize()
                 .background(Color(0xFFF4F6F8))
                 .padding(innerPadding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.Start
         ) {
-            Text(
-                text = "Horas por Asignar",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            TabRow(selectedTabIndex = state.selectedTab) {
+                Tab(
+                    selected = state.selectedTab == 0,
+                    onClick = { viewModel.onEvent(AsignacionHorasEvent.SelectTab(0)) },
+                    text = { Text("Promedio por Guía") }
+                )
+                Tab(
+                    selected = state.selectedTab == 1,
+                    onClick = { viewModel.onEvent(AsignacionHorasEvent.SelectTab(1)) },
+                    text = { Text("Recientes") }
+                )
+            }
 
             when {
                 state.isLoading -> {
@@ -58,7 +64,7 @@ fun AsignacionHorasScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = greenDark)
                     }
                 }
                 state.errorMessage != null -> {
@@ -74,15 +80,14 @@ fun AsignacionHorasScreen(
                     }
                 }
                 else -> {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(state.data) { card ->
-                            AsignacionHorasCardItem(card = card)
-                        }
+                    when (state.selectedTab) {
+                        0 -> PromediosPorGuiaContent(
+                            promedioGeneral = state.promedioGeneral,
+                            promedios = state.promediosPorGuia
+                        )
+                        1 -> CalificacionesRecientesContent(
+                            calificaciones = state.calificaciones
+                        )
                     }
                 }
             }
@@ -91,36 +96,184 @@ fun AsignacionHorasScreen(
 }
 
 @Composable
-fun AsignacionHorasCardItem(card: CuadroHoras) {
+private fun PromediosPorGuiaContent(
+    promedioGeneral: Double,
+    promedios: List<GuiaPromedioItem>
+) {
+    val greenDark = Color(0xFF1B4332)
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = greenDark),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "PROMEDIO GENERAL",
+                        color = Color(0xFF95D5B2),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Desempeño global de guías",
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+                }
+                Text(
+                    text = String.format(Locale.US, "%.1f / 100", promedioGeneral),
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Text(
+            text = "Promedio individual por guía",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.DarkGray
+        )
+
+        if (promedios.isEmpty()) {
+            EmptyFeedbackCard("Aún no hay evaluaciones para calcular promedios.")
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(promedios) { item ->
+                    GuiaPromedioCardItem(item = item)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalificacionesRecientesContent(
+    calificaciones: List<calificacionGuia>
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Calificaciones recientes por tour",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+
+        if (calificaciones.isEmpty()) {
+            EmptyFeedbackCard("Aún no hay calificaciones registradas por los usuarios.")
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(calificaciones) { calif ->
+                    CalificacionAdminCardItem(calif = calif)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuiaPromedioCardItem(item: GuiaPromedioItem) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(110.dp)
+        shape = RoundedCornerShape(14.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = card.tour_nombre,
+                    text = item.guiaNombre,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = Color.Black
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
+                val textoEvaluaciones = if (item.totalEvaluaciones == 1) {
+                    "1 evaluación recibida"
+                } else {
+                    "${item.totalEvaluaciones} evaluaciones recibidas"
+                }
                 Text(
-                    text = "Asignado a: ${card.persona_asignada}",
-                    fontSize = 13.sp,
+                    text = textoEvaluaciones,
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+
+            Surface(
+                color = Color(0xFF1B4332).copy(alpha = 0.12f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = String.format(Locale.US, "%.1f / 100", item.promedio),
+                    color = Color(0xFF1B4332),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CalificacionAdminCardItem(calif: calificacionGuia) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(14.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = calif.nombre.ifBlank { "Evaluación de Guía" },
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Nota asignada en recorrido",
+                    fontSize = 12.sp,
                     color = Color.Gray
                 )
             }
@@ -130,13 +283,31 @@ fun AsignacionHorasCardItem(card: CuadroHoras) {
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    text = "+${card.horas}h",
+                    text = String.format(Locale.US, "%.1f / 100", calif.calificacion),
                     color = Color(0xFF2D6A4F),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun EmptyFeedbackCard(message: String) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = message, color = Color.Gray)
         }
     }
 }

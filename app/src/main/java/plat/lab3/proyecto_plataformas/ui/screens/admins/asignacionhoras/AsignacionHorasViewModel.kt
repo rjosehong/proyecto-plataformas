@@ -2,7 +2,6 @@ package plat.lab3.proyecto_plataformas.ui.screens.admins.asignacionhoras
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,27 +16,63 @@ class AsignacionHorasViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AsignacionHorasState())
     val uiState: StateFlow<AsignacionHorasState> = _uiState.asStateFlow()
 
-    private var loadJob: Job? = null
-
     init {
-        loadHoras()
+        loadData()
     }
 
-    fun loadHoras() {
-        loadJob?.cancel()
-        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-        loadJob = viewModelScope.launch {
-            ToursRepository.horas()
-                .catch { e ->
-                    _uiState.update {
-                        it.copy(isLoading = false, errorMessage = firestoreErrorMessage(e))
+    fun onEvent(event: AsignacionHorasEvent) {
+        when (event) {
+            is AsignacionHorasEvent.SelectTab -> {
+                _uiState.update { it.copy(selectedTab = event.tabIndex) }
+            }
+        }
+    }
+
+    private fun loadData() {
+        viewModelScope.launch {
+            launch {
+                ToursRepository.horas()
+                    .catch { e -> _uiState.update { it.copy(errorMessage = firestoreErrorMessage(e)) } }
+                    .collect { list -> _uiState.update { it.copy(data = list) } }
+            }
+
+            launch {
+                ToursRepository.calificaciones()
+                    .catch { e -> _uiState.update { it.copy(errorMessage = firestoreErrorMessage(e)) } }
+                    .collect { list ->
+                        val promedioGlobal = if (list.isNotEmpty()) {
+                            list.map { it.calificacion }.average()
+                        } else {
+                            0.0
+                        }
+
+                        val porGuia = list
+                            .groupBy { calif ->
+                                calif.nombre
+                                    .substringBefore(" — ")
+                                    .substringBefore(" (")
+                                    .trim()
+                                    .ifBlank { "Guía sin nombre" }
+                            }
+                            .map { (guia, notas) ->
+                                GuiaPromedioItem(
+                                    guiaNombre = guia,
+                                    promedio = notas.map { it.calificacion }.average(),
+                                    totalEvaluaciones = notas.size
+                                )
+                            }
+                            .sortedByDescending { it.promedio }
+
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                calificaciones = list.reversed(),
+                                promediosPorGuia = porGuia,
+                                promedioGeneral = promedioGlobal
+                            )
+                        }
                     }
-                }
-                .collect { horas ->
-                    _uiState.update {
-                        it.copy(isLoading = false, data = horas, errorMessage = null)
-                    }
-                }
+            }
         }
     }
 }
