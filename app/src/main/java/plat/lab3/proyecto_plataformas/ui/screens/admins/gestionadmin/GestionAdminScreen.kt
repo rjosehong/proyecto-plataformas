@@ -6,11 +6,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,9 +27,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,10 +43,20 @@ fun GestionAdminScreen(
     viewModel: GestionAdminViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val createState by viewModel.createState.collectAsState()
     val greenDark = Color(0xFF1B4332)
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(createState.feedbackMessage) {
+        createState.feedbackMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.onEvent(GestionAdminEvent.ClearFeedback)
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -99,6 +121,23 @@ fun GestionAdminScreen(
                             color = Color.Gray
                         )
                     }
+                    Button(
+                        onClick = { viewModel.onEvent(GestionAdminEvent.OpenCreateTour) },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = greenDark),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Crear tour",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -152,6 +191,19 @@ fun GestionAdminScreen(
                 }
             }
         }
+    }
+
+    if (createState.showDialog) {
+        CreateTourDialog(
+            isSaving = createState.isSaving,
+            errorMessage = createState.dialogError,
+            onConfirm = { nombre, lugar, dia, horaInicial, horaFinal, guias ->
+                viewModel.onEvent(
+                    GestionAdminEvent.CreateTour(nombre, lugar, dia, horaInicial, horaFinal, guias)
+                )
+            },
+            onDismiss = { viewModel.onEvent(GestionAdminEvent.DismissCreateTour) }
+        )
     }
 }
 
@@ -415,6 +467,142 @@ private fun GuidesWorkloadBarCard(
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+private class UpcomingDatesThisYear : SelectableDates {
+    private val today = LocalDate.now()
+
+    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+        val date = Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneOffset.UTC).toLocalDate()
+        return !date.isBefore(today) && date.year == today.year
+    }
+
+    override fun isSelectableYear(year: Int): Boolean = year == today.year
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CreateTourDialog(
+    isSaving: Boolean,
+    errorMessage: String?,
+    onConfirm: (nombre: String, lugar: String, dia: String, horaInicial: Int, horaFinal: Int, guias: Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val today = remember { LocalDate.now() }
+    val dayFormat = remember { DateTimeFormatter.ofPattern("EEE, MMM dd", Locale.ENGLISH) }
+
+    var nombre by remember { mutableStateOf("") }
+    var lugar by remember { mutableStateOf("Edificio del CIT") }
+    var fecha by remember {
+        mutableStateOf(if (today.plusDays(1).year == today.year) today.plusDays(1) else today)
+    }
+    var horaIni by remember { mutableStateOf("10") }
+    var horaFin by remember { mutableStateOf("12") }
+    var guias by remember { mutableStateOf("1") }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = { if (!isSaving) onDismiss() },
+        title = { Text("Crear nuevo tour", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = { nombre = it },
+                    label = { Text("Nombre del tour") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = lugar,
+                    onValueChange = { lugar = it },
+                    label = { Text("Punto de reunión") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Fecha: ${fecha.format(dayFormat)}")
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = horaIni,
+                        onValueChange = { horaIni = it.filter { ch -> ch.isDigit() } },
+                        label = { Text("Hora inicio (24h)") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = horaFin,
+                        onValueChange = { horaFin = it.filter { ch -> ch.isDigit() } },
+                        label = { Text("Hora fin (24h)") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                OutlinedTextField(
+                    value = guias,
+                    onValueChange = { guias = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("Guías necesarios (1 a 5)") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (errorMessage != null) {
+                    Text(text = errorMessage, color = Color.Red, fontSize = 13.sp)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B4332)),
+                enabled = !isSaving && nombre.isNotBlank() && lugar.isNotBlank(),
+                onClick = {
+                    val ini = horaIni.toIntOrNull()?.coerceIn(7, 20) ?: 10
+                    val fin = horaFin.toIntOrNull()?.coerceIn(ini + 1, 21) ?: (ini + 1)
+                    val cupos = guias.toIntOrNull()?.coerceIn(1, 5) ?: 1
+                    onConfirm(nombre, lugar, fecha.format(dayFormat), ini, fin, cupos)
+                }
+            ) {
+                Text(if (isSaving) "Guardando..." else "Crear tour")
+            }
+        },
+        dismissButton = {
+            TextButton(enabled = !isSaving, onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
+
+    if (showDatePicker) {
+        val pickerState = rememberDatePickerState(
+            initialSelectedDateMillis = fecha.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+            selectableDates = UpcomingDatesThisYear()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    pickerState.selectedDateMillis?.let { millis ->
+                        fecha = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                    }
+                    showDatePicker = false
+                }) { Text("Aceptar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+            }
+        ) {
+            DatePicker(state = pickerState)
         }
     }
 }

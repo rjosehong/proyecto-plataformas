@@ -19,8 +19,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import plat.lab3.proyecto_plataformas.data.calendar.CalendarHelper
-import plat.lab3.proyecto_plataformas.data.calendar.rememberCalendarAuthorizer
 import plat.lab3.proyecto_plataformas.data.ejemplos.Tour
 import plat.lab3.proyecto_plataformas.work.RequestNotificationPermission
 import plat.lab3.proyecto_plataformas.work.scheduleTourReminder
@@ -38,35 +36,10 @@ fun ToursScreen(
 
     RequestNotificationPermission()
 
-    val authorizeCalendar = rememberCalendarAuthorizer(
-        onToken = { token ->
-            val tourToSync = state.pendingCalendarTour
-            if (tourToSync != null) {
-                scope.launch {
-                    val link = withContext(Dispatchers.IO) {
-                        runCatching { CalendarHelper.insertTourEvent(token, tourToSync) }.getOrNull()
-                    }
-                    scheduleTourReminder(context, tourToSync)
-                    viewModel.onEvent(ToursScreenEvent.ClearPendingCalendarTour)
-                    val msg = if (link != null) {
-                        "Agregado a Google Calendar y recordatorio programado"
-                    } else {
-                        "Tour guardado y recordatorio programado"
-                    }
-                    viewModel.onEvent(ToursScreenEvent.ShowFeedback(msg))
-                }
-            }
-        },
-        onError = { err ->
-            state.pendingCalendarTour?.let { scheduleTourReminder(context, it) }
-            viewModel.onEvent(ToursScreenEvent.ClearPendingCalendarTour)
-            viewModel.onEvent(ToursScreenEvent.ShowFeedback(err))
-        }
-    )
-
     LaunchedEffect(state.pendingCalendarTour) {
-        if (state.pendingCalendarTour != null) {
-            authorizeCalendar()
+        state.pendingCalendarTour?.let { tour ->
+            scheduleTourReminder(context, tour)
+            viewModel.onEvent(ToursScreenEvent.ClearPendingCalendarTour)
         }
     }
 

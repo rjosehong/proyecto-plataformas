@@ -14,6 +14,8 @@ import plat.lab3.proyecto_plataformas.data.ejemplos.Tour
 import plat.lab3.proyecto_plataformas.data.firestore.ToursRepository
 import plat.lab3.proyecto_plataformas.data.firestore.UsersRepository
 import plat.lab3.proyecto_plataformas.data.firestore.firestoreErrorMessage
+import plat.lab3.proyecto_plataformas.data.teamup.TeamupRepository
+import plat.lab3.proyecto_plataformas.data.teamup.teamupErrorMessage
 
 class AsignacionTourViewModel : ViewModel() {
 
@@ -35,6 +37,20 @@ class AsignacionTourViewModel : ViewModel() {
                 .collect { toursList ->
                     _uiState.update {
                         it.copy(isLoading = false, tours = toursList, errorMessage = null)
+                    }
+                }
+        }
+    }
+
+    private fun syncWithTeamup(tour: Tour) {
+        viewModelScope.launch {
+            TeamupRepository.syncTour(tour)
+                .onSuccess {
+                    _uiState.update { it.copy(feedbackMessage = "Calendario de Teamup actualizado") }
+                }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(feedbackMessage = "No se pudo actualizar Teamup: ${teamupErrorMessage(e)}")
                     }
                 }
         }
@@ -68,6 +84,9 @@ class AsignacionTourViewModel : ViewModel() {
                                     feedbackMessage = "Tour asignado a $guideName"
                                 )
                             }
+                            syncWithTeamup(
+                                targetTour.copy(guia_necesitado = 0, persona_asignada = guideName)
+                            )
                         }.onFailure { e ->
                             _uiState.update {
                                 it.copy(feedbackMessage = firestoreErrorMessage(e))

@@ -24,8 +24,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import plat.lab3.proyecto_plataformas.R
-import plat.lab3.proyecto_plataformas.data.calendar.CalendarHelper
-import plat.lab3.proyecto_plataformas.data.calendar.rememberCalendarAuthorizer
 import plat.lab3.proyecto_plataformas.data.ejemplos.Tour
 import plat.lab3.proyecto_plataformas.work.RequestNotificationPermission
 import plat.lab3.proyecto_plataformas.work.scheduleTourReminder
@@ -52,35 +50,10 @@ fun AsignacionTourScreen(
 
     RequestNotificationPermission()
 
-    val authorizeCalendar = rememberCalendarAuthorizer(
-        onToken = { token ->
-            val tourToSync = state.claimedTourForSync
-            if (tourToSync != null) {
-                scope.launch {
-                    val link = withContext(Dispatchers.IO) {
-                        runCatching { CalendarHelper.insertTourEvent(token, tourToSync) }.getOrNull()
-                    }
-                    scheduleTourReminder(context, tourToSync)
-                    viewModel.onEvent(AsignacionTourEvent.ClearClaimedTourForSync)
-                    val msg = if (link != null) {
-                        "Tour agregado a tu Google Calendar y recordatorio listo"
-                    } else {
-                        "Cupo reclamado y recordatorio programado"
-                    }
-                    viewModel.onEvent(AsignacionTourEvent.ShowFeedback(msg))
-                }
-            }
-        },
-        onError = { err ->
-            state.claimedTourForSync?.let { scheduleTourReminder(context, it) }
-            viewModel.onEvent(AsignacionTourEvent.ClearClaimedTourForSync)
-            viewModel.onEvent(AsignacionTourEvent.ShowFeedback(err))
-        }
-    )
-
     LaunchedEffect(state.claimedTourForSync) {
-        if (state.claimedTourForSync != null) {
-            authorizeCalendar()
+        state.claimedTourForSync?.let { tour ->
+            scheduleTourReminder(context, tour)
+            viewModel.onEvent(AsignacionTourEvent.ClearClaimedTourForSync)
         }
     }
 

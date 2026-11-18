@@ -78,14 +78,11 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
-    //google calendar
-    implementation("com.google.android.gms:play-services-auth:22.0.0")
-    implementation("com.google.api-client:google-api-client-android:2.7.2") {
-        exclude(group = "io.grpc")
-    }
-    implementation("com.google.apis:google-api-services-calendar:v3-rev20260925-2.0.0") {
-        exclude(group = "io.grpc")
-    }
+    //teamup (calendario)
+    implementation("io.ktor:ktor-client-core:3.3.3")
+    implementation("io.ktor:ktor-client-android:3.3.3")
+    implementation("io.ktor:ktor-client-content-negotiation:3.3.3")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.3.3")
     //workmanager
     implementation("androidx.work:work-runtime-ktx:2.12.0")
 }

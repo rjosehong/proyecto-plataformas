@@ -11,6 +11,8 @@ import kotlinx.coroutines.launch
 import plat.lab3.proyecto_plataformas.data.ejemplos.Tour
 import plat.lab3.proyecto_plataformas.data.firestore.ToursRepository
 import plat.lab3.proyecto_plataformas.data.firestore.firestoreErrorMessage
+import plat.lab3.proyecto_plataformas.data.teamup.TeamupRepository
+import plat.lab3.proyecto_plataformas.data.teamup.teamupErrorMessage
 
 class ToursScreenViewModel : ViewModel() {
 
@@ -37,6 +39,20 @@ class ToursScreenViewModel : ViewModel() {
         }
     }
 
+    private fun syncWithTeamup(tour: Tour) {
+        viewModelScope.launch {
+            TeamupRepository.syncTour(tour)
+                .onSuccess {
+                    _uiState.update { it.copy(feedbackMessage = "Calendario de Teamup actualizado") }
+                }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(feedbackMessage = "No se pudo actualizar Teamup: ${teamupErrorMessage(e)}")
+                    }
+                }
+        }
+    }
+
     fun onEvent(event: ToursScreenEvent) {
         when (event) {
             is ToursScreenEvent.SelectTab -> {
@@ -58,6 +74,7 @@ class ToursScreenViewModel : ViewModel() {
                                 feedbackMessage = "Inscrito en ${event.tour.tour_nombre}"
                             )
                         }
+                        syncWithTeamup(event.tour)
                     }.onFailure { e ->
                         _uiState.update {
                             it.copy(feedbackMessage = firestoreErrorMessage(e))
@@ -91,6 +108,7 @@ class ToursScreenViewModel : ViewModel() {
                                 feedbackMessage = "Tour programado y guardado en Firestore"
                             )
                         }
+                        syncWithTeamup(newTour)
                     }.onFailure { e ->
                         _uiState.update {
                             it.copy(feedbackMessage = firestoreErrorMessage(e))

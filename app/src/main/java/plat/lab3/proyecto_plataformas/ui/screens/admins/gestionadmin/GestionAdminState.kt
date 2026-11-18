@@ -17,3 +17,12 @@ data class GestionAdminState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null
 )
+
+// Estado del formulario para crear un tour. Va aparte de GestionAdminState porque ese estado
+// se reemplaza completo cada vez que cambian los datos de Firestore.
+data class AdminCreateTourState(
+    val showDialog: Boolean = false,
+    val isSaving: Boolean = false,
+    val dialogError: String? = null,
+    val feedbackMessage: String? = null
+)

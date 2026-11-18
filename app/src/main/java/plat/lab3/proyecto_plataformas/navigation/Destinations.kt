@@ -23,3 +23,6 @@ object FeedbackTabRoute
 
 @Serializable
 object ProfileTabRoute
+
+@Serializable
+object CalendarRoute
